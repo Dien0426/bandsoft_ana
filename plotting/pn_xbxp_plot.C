@@ -72,7 +72,7 @@ void pn_xbxp_plot(TString inDat, TString inBac, TString inSim){
 	//pn_sim19->SetTitle(Form("Full distribution, E_{sim} > 19 , C_{sim} = %f",full_simnorm19));
 	//label1D(pn_dat,pn_sim19,"|p_{n}| [GeV/c]","Counts");
 
-	c_pn->SaveAs("full_pn.pdf");
+	c_pn->SaveAs("./plots/full_pn.pdf");
 
 
 	// Grab intereseted histograms
@@ -120,7 +120,7 @@ void pn_xbxp_plot(TString inDat, TString inBac, TString inSim){
 		label1D(pn_xb_bins_dat[bin],pn_xb_bins_sim[bin],"|p_{n}| [GeV/c]","Counts");
 		//label1D_sims(pn_xb_bins_sim12[bin],pn_xb_bins_sim19[bin],simnorm12,simnorm19);
 	}
-	c_pn_xb->SaveAs("pn_xb_bins.pdf");
+	c_pn_xb->SaveAs("./plots/pn_xb_bins.pdf");
 
 	// Grab intereseted histograms
 	TCanvas * c_pn_xp = new TCanvas("c_pn_xp","",800,600);
@@ -169,7 +169,7 @@ void pn_xbxp_plot(TString inDat, TString inBac, TString inSim){
 		label1D(pn_xp_bins_dat[bin],pn_xp_bins_sim[bin],"|p_{n}| [GeV/c]","Counts");
 		//label1D_sims(pn_xp_bins_sim12[bin],pn_xp_bins_sim19[bin],simnorm12,simnorm19);
 	}
-	c_pn_xp->SaveAs("pn_xp_bins.pdf");
+	c_pn_xp->SaveAs("./plots/pn_xp_bins.pdf");
 
 
 

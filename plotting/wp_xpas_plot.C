@@ -65,7 +65,7 @@ void wp_xpas_plot(TString inDat, TString inBac, TString inSim){
 	//wp_sim19->SetTitle(Form("Full distribution, E_{sim} > 19 , C_{sim} = %f",full_simnorm19));
 	//label1D(wp_dat,wp_sim19,"W' [GeV]","Counts");
 
-	c_wp->SaveAs("full_wp.pdf");
+	c_wp->SaveAs("./plots/full_wp.pdf");
 
 
 	// Grab intereseted histograms
@@ -115,7 +115,7 @@ void wp_xpas_plot(TString inDat, TString inBac, TString inSim){
 		label1D(wp_xp_bins_dat[bin],wp_xp_bins_sim[bin],"W' [GeV]","Counts");
 		//label1D_sims(wp_xp_bins_sim12[bin],wp_xp_bins_sim19[bin],simnorm12,simnorm19);
 	}
-	c_wp_xp->SaveAs("wp_xp_bins.pdf");
+	c_wp_xp->SaveAs("./plots/wp_xp_bins.pdf");
 
 
 

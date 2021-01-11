@@ -52,7 +52,7 @@ void thetan_xpas_plot(TString inDat, TString inBac, TString inSim){
 	
 	thetan_dat->SetTitle(Form("Full distribution, C_{sim} = %f",full_simnorm));
 	label1D(thetan_dat,thetan_sim,"CosTheta_{n}","Counts");
-	c_thetan->SaveAs("full_thetan.pdf");
+	c_thetan->SaveAs("./plots/full_thetan.pdf");
 
 	// Now draw cos(theta_n) for fixed alphaS and in bins of x':
 	TCanvas * c_thetan_xp_as12 = new TCanvas("c_thetan_xp_as12","",800,600);
@@ -170,10 +170,10 @@ void thetan_xpas_plot(TString inDat, TString inBac, TString inSim){
 
 
 	}
-	c_thetan_xp_as12->SaveAs("thetan_xpbins_as12.pdf");
-	c_thetan_xp_as13->SaveAs("thetan_xpbins_as13.pdf");
-	c_thetan_xp_as14->SaveAs("thetan_xpbins_as14.pdf");
-	c_thetan_xp_as15->SaveAs("thetan_xpbins_as15.pdf");
+	c_thetan_xp_as12->SaveAs("./plots/thetan_xpbins_as12.pdf");
+	c_thetan_xp_as13->SaveAs("./plots/thetan_xpbins_as13.pdf");
+	c_thetan_xp_as14->SaveAs("./plots/thetan_xpbins_as14.pdf");
+	c_thetan_xp_as15->SaveAs("./plots/thetan_xpbins_as15.pdf");
 	
 
 
