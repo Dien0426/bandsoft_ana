@@ -1,6 +1,6 @@
-void must_plot(TString inFileDatTagName, TString inFileBacTagName,
-               TString inFileSimTagName, TString inFileDatIncName,
-               TString inFileSimIncName) {
+void must_plot_layer_new(TString inFileDatTagName, TString inFileBacTagName,
+                         TString inFileSimTagName, TString inFileDatIncName,
+                         TString inFileSimIncName, int layer) {
   gSystem->Load("libclashit_tree.so");
   gSystem->Load("libtaghit_tree.so");
   gSystem->Load("libbandhit_tree.so");
@@ -26,13 +26,10 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
   // Get and set the background normalization for tagged
   TVector3 *datnorm = (TVector3 *)inFileDatTag->Get("bacnorm");
   TVector3 *bacnorm = (TVector3 *)inFileBacTag->Get("bacnorm");
-  inTreeBacTag->SetWeight(122669./ bacnorm->X());
+  inTreeBacTag->SetWeight(datnorm->X() / bacnorm->X());
 
   // Get simulation normalization
-  // double L_tag = 2.28e10 / (130.1);
-  //==Update number from Tyler====
-  
-  double L_tag = 1.74702e9 / (130.1);
+  double L_tag = 2.28e10 / (130.1);
   double L_inc = 9.61e6 / (130.1);
   double Q_inc = 535885;
   double Q_tag = 3.72e+07;
@@ -51,8 +48,8 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
   //			[ N_tag,data (Q2,theta_nq,x';alphaS) / Q_tag] / [
   // N_tag,sim(Q2,theta_nq,x';alphaS) / L_tag,sim ] 	R(tag/inc) =
   //------------------------------------------------------------------------------------------------
-  //				     [ N_inc,data (Q2, x=x') / Q_inc] / [ N_inc,sim
-  //(Q2, x=x') / L_inc,sim ]
+  //				     [ N_inc,data (Q2, x=x') / Q_inc] / [
+  // N_inc,sim (Q2, x=x') / L_inc,sim ]
   //
   //			[ N_tag,data / Q_tag ]	 [ N_inc,sim / L_inc,sim ]
   //	R(tag/inc) = 	---------------------- * -------------------------
@@ -163,6 +160,7 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
 
   TCut lpt = "tag[nleadindex]->getPt().Mag() <  0.1 ";
   TCut hpt = "tag[nleadindex]->getPt().Mag() >= 0.1 ";
+  TCut layer_cut = Form("nHits[nleadindex]->getLayer() == %d", layer);
 
   for (int bin = 0; bin < nXp_bins; bin++) {
     double this_min_xp = Xp_min + 0.05 + bin * (Xp_max - Xp_min) / nXp_bins;
@@ -172,40 +170,52 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
         Form("tag[nleadindex]->getXp() > %f && tag[nleadindex]->getXp() < %f",
              this_min_xp, this_max_xp);
 
-    inTreeDatTag->Draw(
-        Form("tag[nleadindex]->getAs() >> h1_as_xp_dat_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3", "goff");
-    inTreeBacTag->Draw(
-        Form("tag[nleadindex]->getAs() >> h1_as_xp_bac_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 ", "goff");
-    inTreeSimTag->Draw(
-        Form("tag[nleadindex]->getAs() >> h1_as_xp_sim_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3", "goff");
+    inTreeDatTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_dat_%i", bin),
+                       this_xp_cut &&
+                           "tag[nleadindex]->getMomentumN().Mag() > 0.3" &&
+                           layer_cut,
+                       "goff");
+    inTreeBacTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_bac_%i", bin),
+                       this_xp_cut &&
+                           "tag[nleadindex]->getMomentumN().Mag() > 0.3" &&
+                           layer_cut,
+                       "goff");
+    inTreeSimTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_sim_%i", bin),
+                       this_xp_cut &&
+                           "tag[nleadindex]->getMomentumN().Mag() > 0.3" &&
+                           layer_cut,
+                       "goff");
 
     inTreeDatTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_lpt_dat_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && lpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && lpt &&
+            layer_cut,
         "goff");
     inTreeBacTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_lpt_bac_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && lpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && lpt &&
+            layer_cut,
         "goff");
     inTreeSimTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_lpt_sim_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3  " && lpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3  " && lpt &&
+            layer_cut,
         "goff");
 
     inTreeDatTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_hpt_dat_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt &&
+            layer_cut,
         "goff");
     inTreeBacTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_hpt_bac_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt &&
+            layer_cut,
         "goff");
     inTreeSimTag->Draw(
         Form("tag[nleadindex]->getAs() >> h1_as_xp_hpt_sim_%i", bin),
-        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt,
+        this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3 " && hpt &&
+            layer_cut,
         "goff");
 
     // Do the background subtraction:
@@ -227,7 +237,8 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     c1_as_xp_tag->cd(bin + 1);
     double new_simnorm =
         h1_as_xp_dat[bin]->Integral() / h1_as_xp_sim[bin]->Integral();
-    TString current_title = Form("%f < x' < %f", this_min_xp, this_max_xp);
+    TString current_title =
+        Form("%2.2f < x' < %2.2f, layer =%d", this_min_xp, this_max_xp, layer);
     h1_as_xp_dat[bin]->SetTitle(current_title +
                                 Form(", C_{new} = %f", new_simnorm));
     label1D(h1_as_xp_dat[bin], h1_as_xp_sim[bin], "Alpha_{S}", "Counts");
@@ -237,8 +248,8 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     c1_as_xp_lpt_tag->cd(bin + 1);
     double new_simnorm_lpt =
         h1_as_xp_lpt_dat[bin]->Integral() / h1_as_xp_lpt_sim[bin]->Integral();
-    TString current_title_lpt =
-        Form("%f < x' < %f, pt<100", this_min_xp, this_max_xp);
+    TString current_title_lpt = Form("%2.2f < x' < %2.2f, pt<100, layer == %d",
+                                     this_min_xp, this_max_xp, layer);
     h1_as_xp_lpt_dat[bin]->SetTitle(current_title_lpt +
                                     Form(", C_{new} = %f", new_simnorm_lpt));
     label1D(h1_as_xp_lpt_dat[bin], h1_as_xp_lpt_sim[bin], "Alpha_{S}",
@@ -249,8 +260,8 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     c1_as_xp_hpt_tag->cd(bin + 1);
     double new_simnorm_hpt =
         h1_as_xp_hpt_dat[bin]->Integral() / h1_as_xp_hpt_sim[bin]->Integral();
-    TString current_title_hpt =
-        Form("%f < x' < %f, pt>100", this_min_xp, this_max_xp);
+    TString current_title_hpt = Form("%2.2f < x' < %2.2f, pt>100, layer =%d",
+                                     this_min_xp, this_max_xp, layer);
     h1_as_xp_hpt_dat[bin]->SetTitle(current_title_hpt +
                                     Form(", C_{new} = %f", new_simnorm_hpt));
     label1D(h1_as_xp_hpt_dat[bin], h1_as_xp_hpt_sim[bin], "Alpha_{S}",
@@ -386,10 +397,13 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     h1_as_xp_hpt_03[bin]->Draw("ep same");
     h1_as_xp_hpt_03[bin]->SetLineColor(2);
   }
-  c1_must_xp03->SaveAs("ratio_tag_inc_xp03.pdf");
-  c1_must_xp03_lpt->SaveAs("ratio_tag_inc_xp03_lpt.pdf");
-  c1_must_xp03_hpt->SaveAs("ratio_tag_inc_xp03_hpt.pdf");
-  c1_must_xp03_overlaid->SaveAs("ratio_tag_inc_xp03_overlaid.pdf");
+  c1_must_xp03->SaveAs(Form("./plots/ratio_tag_inc_xp03_%d.pdf", layer));
+  c1_must_xp03_lpt->SaveAs(
+      Form("./plots/ratio_tag_inc_xp03_lpt_%d.pdf", layer));
+  c1_must_xp03_hpt->SaveAs(
+      Form("./plots/ratio_tag_inc_xp03_hpt_%d.pdf", layer));
+  c1_must_xp03_overlaid->SaveAs(
+      Form("./plots/ratio_tag_inc_xp03_overlaid_%d.pdf", layer));
 
   // Doing the inverted plots xp bin for a given bin in as
   double as_xp = 0., as_xp_lpt = 0, as_xp_hpt;
@@ -423,9 +437,12 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     double as_low = as_bins_val[as];
     double as_high = as_bins_val[as + 1];
 
-    TString tit = Form("%2.1f< Alpha_{s}<%2.1f", as_low, as_high);
-    TString tit_lpt = Form("%2.1f< Alpha_{s}<%2.1f, pt <100", as_low, as_high);
-    TString tit_hpt = Form("%2.1f< Alpha_{s}<%2.1f, pt>100", as_low, as_high);
+    TString tit =
+        Form("%2.1f< Alpha_{s}<%2.1f, layer =%d", as_low, as_high, layer);
+    TString tit_lpt = Form("%2.1f< Alpha_{s}<%2.1f, pt <100, layer =%d", as_low,
+                           as_high, layer);
+    TString tit_hpt = Form("%2.1f< Alpha_{s}<%2.1f, pt>100, layer =%d", as_low,
+                           as_high, layer);
 
     int index = 0;
     int index_lpt = 0;
@@ -482,13 +499,19 @@ void must_plot(TString inFileDatTagName, TString inFileBacTagName,
     c1_must_invert_hpt->cd(as);
     gr_as_hpt[as]->Draw("AP");
     gr_as_hpt[as]->GetXaxis()->SetTitle("x^{'}");
-    gr_as_hpt[as]->GetYaxis()->SetTitle("R=R_{tag}/R_{inc} / R_(x'=0.3)");
+    gr_as_hpt[as]->GetYaxis()->SetTitle("R=R_{tag}/R_{inc} /R_(x'=0.3)");
     gr_as_hpt[as]->SetTitle(tit_lpt);
     gr_as_hpt[as]->SetMaximum(3);
     gr_as_hpt[as]->SetMinimum(0.5);
     gr_as_hpt[as]->SetMarkerStyle(20);
   }
 
+  c1_must_invert->Print(
+      Form("./plots/ratio_tag_inc_xp03_invert_%d.pdf", layer));
+  c1_must_invert_lpt->Print(
+      Form("./plots/ratio_tag_inc_xp03_lpt_invert_%d.pdf", layer));
+  c1_must_invert_hpt->Print(
+      Form("./plots/ratio_tag_inc_xp03_hpt_invert_%d.pdf", layer));
   return;
 }
 

@@ -1,6 +1,6 @@
 #include "kinematic_cuts.h"
 
-void phin(TString inDat, TString inBac, TString inSim){
+void pn_layer(TString inDat, TString inBac, TString inSim, int layer){
 
 	// Define some function used
 	void label1D(TH1D* data, TH1D* sim, TString xlabel, TString ylabel);
@@ -19,26 +19,32 @@ void phin(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
-        inTreeBac->SetWeight( Normmix/ bacnorm->X() );
+	//	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+        inTreeBac->SetWeight(Normmix/ bacnorm->X());
 	
+
 	// Define histograms we want to plot:
-	TH1D ** phin_dat = new TH1D*[3];
-	TH1D ** phin_bac = new TH1D*[3];
-	TH1D ** phin_sim = new TH1D*[3];
+	TH1D ** pn_dat = new TH1D*[3];
+	TH1D ** pn_bac = new TH1D*[3];
+	TH1D ** pn_sim = new TH1D*[3];
 	for(int i = 0 ; i < 3 ; i++){
-		phin_dat[i] = new TH1D(Form("phin_dat_%i",i),"",45,-180,180);
-		phin_bac[i] = new TH1D(Form("phin_bac_%i",i),"",45,-180,180);
-		phin_sim[i] = new TH1D(Form("phin_sim_%i",i),"",45,-180,180);
+		pn_dat[i] = new TH1D(Form("pn_dat_%i",i),"",40,0.2,0.6);
+		pn_bac[i] = new TH1D(Form("pn_bac_%i",i),"",40,0.2,0.6);
+		pn_sim[i] = new TH1D(Form("pn_sim_%i",i),"",40,0.2,0.6);
 	}
+	
 
-       	//Adding the edep cuts here
-	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
+	// Draw the full pn distribution
+	
+	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);	
 
-	// Draw the full phin distribution
-	TCanvas * c_phin = new TCanvas("c_phin","",800,600);
+	//Define the cut on layer number
+	TCut layer_cut = Form("nHits[nleadindex]->getLayer() == %d", layer);
+	
+	TCanvas * c_pn = new TCanvas();
 	double sim_scaling = 0;
-	c_phin->Divide(3,2);
+	c_pn->Divide(3,2);
 	for( int i = 0 ; i < 3 ; i++){
 		TCut pTcut = "";
 		TString pTtitle = "Full pT";
@@ -51,29 +57,31 @@ void phin(TString inDat, TString inBac, TString inSim){
 			pTtitle = "High pT";
 		}
 
-		c_phin->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Phi()*180./TMath::Pi() >> phin_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Phi()*180./TMath::Pi() >> phin_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Phi()*180./TMath::Pi() >> phin_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		c_pn->cd(i+1);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && layer_cut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && layer_cut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && layer_cut && edep_cut);
 
 		// Background subraction
-		phin_dat[i]->Add(phin_bac[i],-1);
+		pn_dat[i]->Add(pn_bac[i],-1);
 
 		// Simulation scaling only from no pT cut distribution (i.e. from full distribution)
-		double full_simnorm = (double)phin_dat[0]->Integral() / phin_sim[0]->Integral();
+		double full_simnorm = (double)pn_dat[0]->Integral() / pn_sim[0]->Integral();
+	
+		
 		if( i == 0 ) sim_scaling = full_simnorm;
-		phin_sim[i]->Scale( sim_scaling );
+		pn_sim[i]->Scale( sim_scaling );
 		
-		
-		phin_sim[i]->SetTitle(pTtitle+Form(", C_{sim} = %f, ",sim_scaling));
-		label1D(phin_dat[i],phin_sim[i],"Phi_{n} [Deg.]","Counts");
+		double sec_simnorm = (double)pn_dat[i]->Integral()/ pn_sim[i]->Integral();
+		pn_sim[i]->SetTitle(pTtitle+Form(", C_{full} = %1.3f, layer %d, C = %1.3f",sim_scaling, layer, sec_simnorm));
+		label1D(pn_dat[i],pn_sim[i],"|p_{n}| [GeV/c]","Counts");
 
-		c_phin->cd(4+i);
-		label1D_ratio(phin_dat[i],phin_sim[i],"Phi_{n} [Deg.]","Data/Sim",0,2);
+		c_pn->cd(4+i);
+		label1D_ratio(pn_dat[i],pn_sim[i],"|p_{n}| [GeV/c]","Data/Sim",0,2);
 	}
 
 
-	c_phin->SaveAs("full_phin.pdf");
+	c_pn->SaveAs(Form("./full_pn_layer_%d.pdf", layer));
 
 	return;
 }

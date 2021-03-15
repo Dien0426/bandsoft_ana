@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void yn(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,8 +19,9 @@ void yn(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
-
+	//	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(Normmix / bacnorm->X() );
+	
 	// Define histograms we want to plot:
 	TH1D ** yn_dat = new TH1D*[3];
 	TH1D ** yn_bac = new TH1D*[3];
@@ -29,6 +32,9 @@ void yn(TString inDat, TString inBac, TString inSim){
 		yn_sim[i] = new TH1D(Form("yn_sim_%i",i),"",300,-50,100);
 	}
 
+	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
+	
 	// Draw the full yn distribution
 	TCanvas * c_yn = new TCanvas("c_yn","",800,600);
 	double sim_scaling = 0;
@@ -46,9 +52,15 @@ void yn(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_yn->cd(i+1);
-		inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Y() >> yn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		
+                inTreeDat->Draw(Form("nHits[nleadindex]->getY() >> yn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("nHits[nleadindex]->getY() >> yn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("nHits[nleadindex]->getY() >> yn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+
+		
 
 		// Background subraction
 		yn_dat[i]->Add(yn_bac[i],-1);

@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void thetaq(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,9 @@ void thetaq(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
+	
 
 	// Define histograms we want to plot:
 	TH1D ** thetaq_dat = new TH1D*[3];
@@ -28,6 +32,9 @@ void thetaq(TString inDat, TString inBac, TString inSim){
 		thetaq_bac[i] = new TH1D(Form("thetaq_bac_%i",i),"",40,0,20);
 		thetaq_sim[i] = new TH1D(Form("thetaq_sim_%i",i),"",40,0,20);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full thetaq distribution
 	TCanvas * c_thetaq = new TCanvas("c_thetaq","",800,600);
@@ -46,9 +53,9 @@ void thetaq(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_thetaq->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumQ().Theta()*180./TMath::Pi() >> thetaq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		thetaq_dat[i]->Add(thetaq_bac[i],-1);

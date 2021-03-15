@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void wp(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,9 @@ void wp(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
+	
 
 	// Define histograms we want to plot:
 	TH1D ** wp_dat = new TH1D*[3];
@@ -28,6 +32,9 @@ void wp(TString inDat, TString inBac, TString inSim){
 		wp_bac[i] = new TH1D(Form("wp_bac_%i",i),"",14,1.6,3);
 		wp_sim[i] = new TH1D(Form("wp_sim_%i",i),"",14,1.6,3);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full wp distribution
 	TCanvas * c_wp = new TCanvas("c_wp","",800,600);
@@ -46,9 +53,9 @@ void wp(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_wp->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getWp() >> wp_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getWp() >> wp_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getWp() >> wp_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getWp() >> wp_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getWp() >> wp_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getWp() >> wp_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		wp_dat[i]->Add(wp_bac[i],-1);

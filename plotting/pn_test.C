@@ -1,4 +1,4 @@
-void pn_xbxp_plot(TString inDat, TString inBac, TString inSim){
+void pn_test(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
 	void label1D(TH1D* data, TH1D* sim, TString xlabel, TString ylabel);
@@ -18,9 +18,7 @@ void pn_xbxp_plot(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	
-	//===hardcode this for now, due with it later
-	inTreeBac->SetWeight( 122788. / 147621606);
+	inTreeBac->SetWeight(122669. / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D * pn_dat = new TH1D("pn_dat","pn_dat",40,0.2,0.6);

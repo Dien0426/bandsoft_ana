@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void pe(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,7 @@ void pe(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** pe_dat = new TH1D*[3];
@@ -28,6 +30,9 @@ void pe(TString inDat, TString inBac, TString inSim){
 		pe_bac[i] = new TH1D(Form("pe_bac_%i",i),"",20,3,7);
 		pe_sim[i] = new TH1D(Form("pe_sim_%i",i),"",20,3,7);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full pe distribution
 	TCanvas * c_pe = new TCanvas("c_pe","",800,600);
@@ -46,9 +51,9 @@ void pe(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_pe->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumE().Mag() >> pe_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		pe_dat[i]->Add(pe_bac[i],-1);

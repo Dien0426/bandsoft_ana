@@ -1,6 +1,12 @@
 void must_plot(TString inFileDatTagName, TString inFileBacTagName,
 	       	 TString inFileSimTagName, TString inFileDatIncName, 
 		 TString inFileSimIncName ){
+
+       gSystem->Load("libclashit_tree.so");
+        gSystem->Load("libtaghit_tree.so");
+        gSystem->Load("libbandhit_tree.so");
+        gSystem->Load("libgenpart_tree.so");
+  
 	// Define some function used
 	void label1D(TH1D* data, TH1D* sim, TString xlabel, TString ylabel);
 	void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int color);

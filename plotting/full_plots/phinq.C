@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void phinq(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,9 @@ void phinq(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(Normmix / bacnorm->X() );
+	
 
 	// Define histograms we want to plot:
 	TH1D ** phinq_dat = new TH1D*[3];
@@ -28,7 +32,10 @@ void phinq(TString inDat, TString inBac, TString inSim){
 		phinq_bac[i] = new TH1D(Form("phinq_bac_%i",i),"",45,-180,180);
 		phinq_sim[i] = new TH1D(Form("phinq_sim_%i",i),"",45,-180,180);
 	}
+	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
+	
 	// Draw the full phinq distribution
 	TCanvas * c_phinq = new TCanvas("c_phinq","",800,600);
 	double sim_scaling = 0;
@@ -46,9 +53,9 @@ void phinq(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_phinq->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getPhiNQ()*180./TMath::Pi() >> phinq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		phinq_dat[i]->Add(phinq_bac[i],-1);

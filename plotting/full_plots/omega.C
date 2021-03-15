@@ -1,3 +1,6 @@
+#include "kinematic_cuts.h"
+
+
 void omega(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +20,7 @@ void omega(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix/ bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** omega_dat = new TH1D*[3];
@@ -28,6 +31,10 @@ void omega(TString inDat, TString inBac, TString inSim){
 		omega_bac[i] = new TH1D(Form("omega_bac_%i",i),"",25,3,8);
 		omega_sim[i] = new TH1D(Form("omega_sim_%i",i),"",25,3,8);
 	}
+
+	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
+	
 
 	// Draw the full omega distribution
 	TCanvas * c_omega = new TCanvas("c_omega","",800,600);
@@ -46,9 +53,9 @@ void omega(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_omega->cd(i+1);
-		inTreeDat->Draw(Form("eHit->getOmega() >> omega_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("eHit->getOmega() >> omega_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("eHit->getOmega() >> omega_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("eHit->getOmega() >> omega_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("eHit->getOmega() >> omega_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("eHit->getOmega() >> omega_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		omega_dat[i]->Add(omega_bac[i],-1);

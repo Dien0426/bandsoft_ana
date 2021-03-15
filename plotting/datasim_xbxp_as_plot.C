@@ -21,7 +21,7 @@ void datasim_xbxp_as_plot(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( 122669. / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	// 	x' and xB:

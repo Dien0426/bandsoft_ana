@@ -1,3 +1,6 @@
+#include "kinematic_cuts.h"
+
+
 void thetae(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +20,7 @@ void thetae(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix/ bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** thetae_dat = new TH1D*[3];
@@ -28,6 +31,9 @@ void thetae(TString inDat, TString inBac, TString inSim){
 		thetae_bac[i] = new TH1D(Form("thetae_bac_%i",i),"",23,7,30);
 		thetae_sim[i] = new TH1D(Form("thetae_sim_%i",i),"",23,7,30);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full thetae distribution
 	TCanvas * c_thetae = new TCanvas("c_thetae","",800,600);
@@ -46,9 +52,9 @@ void thetae(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_thetae->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumE().Theta()*180./TMath::Pi() >> thetae_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		thetae_dat[i]->Add(thetae_bac[i],-1);

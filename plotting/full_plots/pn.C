@@ -1,3 +1,6 @@
+#include "kinematic_cuts.h"
+
+
 void pn(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +20,9 @@ void pn(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+        inTreeBac->SetWeight(Normmix / bacnorm->X() );
+	
 
 	// Define histograms we want to plot:
 	TH1D ** pn_dat = new TH1D*[3];
@@ -28,6 +33,10 @@ void pn(TString inDat, TString inBac, TString inSim){
 		pn_bac[i] = new TH1D(Form("pn_bac_%i",i),"",40,0.2,0.6);
 		pn_sim[i] = new TH1D(Form("pn_sim_%i",i),"",40,0.2,0.6);
 	}
+
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full pn distribution
 	TCanvas * c_pn = new TCanvas("c_pn","",800,600);
@@ -46,9 +55,9 @@ void pn(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_pn->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Mag() >> pn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		pn_dat[i]->Add(pn_bac[i],-1);

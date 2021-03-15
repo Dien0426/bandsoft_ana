@@ -1,17 +1,9 @@
-void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
+void must_plot(TString inFileDatTagName, TString inFileBacTagName,
 	       	 TString inFileSimTagName, TString inFileDatIncName, 
 		 TString inFileSimIncName ){
- gSystem->Load("libclashit_tree.so");
-  gSystem->Load("libtaghit_tree.so");
-  gSystem->Load("libbandhit_tree.so");
-  gSystem->Load("libgenpart_tree.so");
-
-  gStyle->SetOptStat(0);
-  
 	// Define some function used
 	void label1D(TH1D* data, TH1D* sim, TString xlabel, TString ylabel);
-	void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int color );
-	void label1D_ratio_normed(TH1D* data, double norm, TString xlabel, TString ylabel, int color);
+	void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int color);
 
 
 
@@ -46,11 +38,11 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	const double As_min = 1.3;
 	const double As_max = 1.6;
 	const int nXp_bins = 4;
-	const double Xp_min = 0.25;
-	const double Xp_max = 0.65;
+	const double Xp_min = 0.2;
+	const double Xp_max = 0.6;
 	const int nXb_bins = 4;
-	const double Xb_min = 0.25;
-	const double Xb_max = 0.65;
+	const double Xb_min = 0.2;
+	const double Xb_max = 0.6;
 	// What we want:
 	//			[ N_tag,data (Q2,theta_nq,x';alphaS) / Q_tag] / [ N_tag,sim(Q2,theta_nq,x';alphaS) / L_tag,sim ]
 	//	R(tag/inc) = 	------------------------------------------------------------------------------------------------
@@ -66,13 +58,13 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	//
 	// These histograms all share a Q2 bin of [2,10]
 	// The tag histograms have cos_theta_nq bin of [-1,-0.8]
-	TH1D ** h1_as_xp_dat = new TH1D*[nAs_bins]; // this is an alphaS histogram in a bin of X' for dat
-	TH1D ** h1_as_xp_bac = new TH1D*[nAs_bins]; // this is an alphaS histogram in a bin of X' for dat
-	TH1D ** h1_as_xp_sim = new TH1D*[nAs_bins]; // this is an alphaS histogram in a bin of X' for sim
-	for( int bin = 0 ; bin < nAs_bins ; bin++ ){
-		h1_as_xp_dat[bin]	= new TH1D(Form("h1_as_xp_dat_%i",bin),"",nXp_bins,Xp_min,Xp_max);
-		h1_as_xp_bac[bin]	= new TH1D(Form("h1_as_xp_bac_%i",bin),"",nXp_bins,Xp_min,Xp_max);
-		h1_as_xp_sim[bin]	= new TH1D(Form("h1_as_xp_sim_%i",bin),"",nXp_bins,Xp_min,Xp_max);
+	TH1D ** h1_as_xp_dat = new TH1D*[nXp_bins]; // this is an alphaS histogram in a bin of X' for dat
+	TH1D ** h1_as_xp_bac = new TH1D*[nXp_bins]; // this is an alphaS histogram in a bin of X' for dat
+	TH1D ** h1_as_xp_sim = new TH1D*[nXp_bins]; // this is an alphaS histogram in a bin of X' for sim
+	for( int bin = 0 ; bin < nXp_bins ; bin++ ){
+		h1_as_xp_dat[bin]	= new TH1D(Form("h1_as_xp_dat_%i",bin),"",nAs_bins,As_min,As_max);
+		h1_as_xp_bac[bin]	= new TH1D(Form("h1_as_xp_bac_%i",bin),"",nAs_bins,As_min,As_max);
+		h1_as_xp_sim[bin]	= new TH1D(Form("h1_as_xp_sim_%i",bin),"",nAs_bins,As_min,As_max);
 	}
 	TH1D ** h1_q2_xb_dat = new TH1D*[10];
 	TH1D ** h1_q2_xb_sim = new TH1D*[10];
@@ -88,15 +80,15 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	TCanvas * c1_as_xp_tag = new TCanvas("c1_as_xp_tag","",800,600);
 	c1_as_xp_tag->Divide(3,2);
 	double TAGSUM = 0;
-	for( int bin = 0 ; bin < nAs_bins ; bin++ ){
+	for( int bin = 0 ; bin < nXp_bins ; bin++ ){
 		c1_as_xp_tag->cd(bin+1);
-		double this_min_as = As_min + bin*(As_max - As_min)/nAs_bins;
-		double this_max_as = As_min + (bin+1)*(As_max - As_min)/nAs_bins;
-		TCut this_as_cut = Form("tag[nleadindex]->getAs() > %f && tag[nleadindex]->getAs() < %f",this_min_as,this_max_as);
+		double this_min_xp = Xp_min+0.05 + bin*(Xp_max - Xp_min)/nXp_bins;
+		double this_max_xp = Xp_min+0.05 + (bin+1)*(Xp_max - Xp_min)/nXp_bins;
+		TCut this_xp_cut = Form("tag[nleadindex]->getXp() > %f && tag[nleadindex]->getXp() < %f",this_min_xp,this_max_xp);
 
-		inTreeDatTag->Draw(Form("tag[nleadindex]->getXp2() >> h1_as_xp_dat_%i",bin),this_as_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
-		inTreeBacTag->Draw(Form("tag[nleadindex]->getXp2() >> h1_as_xp_bac_%i",bin),this_as_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
-		inTreeSimTag->Draw(Form("tag[nleadindex]->getXp2() >> h1_as_xp_sim_%i",bin),this_as_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
+		inTreeDatTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_dat_%i",bin),this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
+		inTreeBacTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_bac_%i",bin),this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
+		inTreeSimTag->Draw(Form("tag[nleadindex]->getAs() >> h1_as_xp_sim_%i",bin),this_xp_cut && "tag[nleadindex]->getMomentumN().Mag() > 0.3");
 
 		// Do the background subtraction:
 		h1_as_xp_dat[bin]->Add(h1_as_xp_bac[bin],-1);
@@ -108,9 +100,9 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 		TAGSUM += h1_as_xp_dat[bin]->Integral();
 		// Plot data and simulation:
 		double new_simnorm = h1_as_xp_dat[bin]->Integral() / h1_as_xp_sim[bin]->Integral();
-		TString current_title = Form("%f < Alpha_{S} < %f",this_min_as,this_max_as);
+		TString current_title = Form("%f < x' < %f",this_min_xp,this_max_xp);
 		h1_as_xp_dat[bin]->SetTitle( current_title );
-		label1D(h1_as_xp_dat[bin],h1_as_xp_sim[bin],"x'","Counts");
+		label1D(h1_as_xp_dat[bin],h1_as_xp_sim[bin],"Alpha_{S}","Counts");
 	}
 	c1_as_xp_tag->SaveAs("as_xpBins_tag.pdf");
 
@@ -126,8 +118,8 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	double INCSUM = 0;
 	for( int bin = 0 ; bin < nXb_bins ; bin++ ){
 		c1_q2_xb_inc->cd(bin+1);
-		double this_min_xb = Xb_min + bin*(Xb_max - Xb_min)/nXb_bins;
-		double this_max_xb = Xb_min + (bin+1)*(Xb_max - Xb_min)/nXb_bins;
+		double this_min_xb = Xb_min+0.05 + bin*(Xb_max - Xb_min)/nXb_bins;
+		double this_max_xb = Xb_min+0.05 + (bin+1)*(Xb_max - Xb_min)/nXb_bins;
 		TCut this_xb_cut = Form("eHit->getXb() > %f && eHit->getXb() < %f",this_min_xb,this_max_xb);
 
 		inTreeDatInc->Draw(Form("eHit->getQ2() >> h1_q2_xb_dat_%i",bin),this_xb_cut);
@@ -149,12 +141,11 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	}
 	c1_q2_xb_inc->SaveAs("q2_xbBins_inc.pdf");
 
-	int colors[nAs_bins] = {1,8,9};
 
 	// Now do the R_tag/R_inc ratio
 	TCanvas * c1_must = new TCanvas("c1_must","",800,600);
 	c1_must->Divide(3,2);
-	for( int bin = 0 ; bin < nAs_bins ; bin++ ){
+	for( int bin = 0 ; bin < nXp_bins ; bin++ ){
 		c1_must->cd(bin+1);
 
 
@@ -167,7 +158,7 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 		h1_as_xp_dat[bin]->Scale( N_inc_sim / N_inc_dat );	// N_dat,tag / N_dat,inc
 
 		
-		label1D_ratio(h1_as_xp_dat[bin],h1_as_xp_sim[bin],"x'","R=R_{tag}/R_{inc}",colors[bin]);
+		label1D_ratio(h1_as_xp_dat[bin],h1_as_xp_sim[bin],"Alpha_{S}","R=R_{tag}/R_{inc}",2);
 
 	}
 	c1_must->SaveAs("ratio_tag_inc.pdf");
@@ -175,11 +166,12 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	TCanvas * c1_must_xp03 = new TCanvas("c1_must_xp03","",800,600);
 	c1_must_xp03->Divide(2,2);
 
-	for( int bin = 0 ; bin < nAs_bins ; bin++ ){
+	int colors[nXp_bins] = {2,1,8,9};
+	for( int bin = 0 ; bin < nXp_bins ; bin++ ){
 		c1_must_xp03->cd(bin+1);
 
 		h1_as_xp_dat[bin]->Divide( h1_as_xp_sim[bin] );
-		label1D_ratio_normed(h1_as_xp_dat[bin],h1_as_xp_dat[bin]->GetBinContent(1),"x'","R_{normed}",colors[bin]);
+		label1D_ratio(h1_as_xp_dat[bin],h1_as_xp_dat[0],"Alpha_{S}","R_{normed}",colors[bin]);
 
 	}
 	c1_must_xp03->SaveAs("ratio_tag_inc_xp03.pdf");
@@ -188,15 +180,11 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	TCanvas * c1_must_xp03_overlaid = new TCanvas("c1_must_xp03_overlaid","",800,600);
 	c1_must_xp03_overlaid->cd();
 	
-	h1_as_xp_dat[0]->Scale( 1./h1_as_xp_dat[0]->GetBinContent(1) );
-	h1_as_xp_dat[1]->Scale( 1./h1_as_xp_dat[1]->GetBinContent(1) );
-	h1_as_xp_dat[2]->Scale( 1./h1_as_xp_dat[2]->GetBinContent(1) );
+	//h1_as_xp_dat[0]->Divide(h1_as_xp_dat[0]);
+	h1_as_xp_dat[1]->Divide(h1_as_xp_dat[0]);
+	h1_as_xp_dat[2]->Divide(h1_as_xp_dat[0]);
+	h1_as_xp_dat[3]->Divide(h1_as_xp_dat[0]);
 	
-	h1_as_xp_dat[0]->SetLineColor(colors[0]);
-	h1_as_xp_dat[0]->SetMarkerColor(colors[0]);
-	h1_as_xp_dat[0]->SetLineWidth(3);
-	h1_as_xp_dat[0]->SetStats(0);
-
 	h1_as_xp_dat[1]->SetLineColor(colors[1]);
 	h1_as_xp_dat[1]->SetMarkerColor(colors[1]);
 	h1_as_xp_dat[1]->SetLineWidth(3);
@@ -207,22 +195,27 @@ void must_plot_inverted(TString inFileDatTagName, TString inFileBacTagName,
 	h1_as_xp_dat[2]->SetLineWidth(3);
 	h1_as_xp_dat[2]->SetStats(0);
 
-	h1_as_xp_dat[0]->Draw("ep");
-	h1_as_xp_dat[1]->Draw("ep,same");
-	h1_as_xp_dat[2]->Draw("ep,same");
+	h1_as_xp_dat[3]->SetLineColor(colors[3]);
+	h1_as_xp_dat[3]->SetMarkerColor(colors[3]);
+	h1_as_xp_dat[3]->SetLineWidth(3);
+	h1_as_xp_dat[3]->SetStats(0);
 
-	TLine* line = new TLine(0.25, 1.,0.65, 1.);
+	h1_as_xp_dat[1]->Draw("ep");
+	h1_as_xp_dat[2]->Draw("ep,same");
+	h1_as_xp_dat[3]->Draw("ep,same");
+
+	TLine* line = new TLine(1.3, 1.,1.6, 1.);
 	line->SetLineWidth(3);
 	line->SetLineColor(2);
 	line->Draw("same");
 
-	h1_as_xp_dat[0]->GetYaxis()->SetRangeUser(0.7,3);
-	h1_as_xp_dat[0]->GetXaxis()->SetTitle("x'");
-	h1_as_xp_dat[0]->GetYaxis()->SetTitle("R_{normed}");
-	h1_as_xp_dat[0]->SetTitle("");
+	h1_as_xp_dat[1]->GetYaxis()->SetRangeUser(0.7,3);
+	h1_as_xp_dat[1]->GetXaxis()->SetTitle("Alpha_{S}");
+	h1_as_xp_dat[1]->GetYaxis()->SetTitle("R_{normed}");
+	h1_as_xp_dat[1]->SetTitle("");
 	
 	c1_must_xp03_overlaid->SaveAs("ratio_tag_inc_xp03_overlaid.pdf");
-	
+
 	return;
 }
 
@@ -258,7 +251,7 @@ void label1D(TH1D* data, TH1D* sim, TString xlabel, TString ylabel){
 	return;
 }
 
-void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int color ){
+void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int color){
 	TH1D * data_copy = (TH1D*) data->Clone();
 	TH1D * sim_copy = (TH1D*) sim->Clone();
 	
@@ -288,32 +281,5 @@ void label1D_ratio(TH1D* data, TH1D* sim, TString xlabel, TString ylabel, int co
 	data_copy->GetYaxis()->SetTitle(ylabel);
 
 	//data_copy->Fit("pol1","ESR","",1.3,1.6);
-
-	return;
-}
-void label1D_ratio_normed(TH1D* data, double norm, TString xlabel, TString ylabel, int color){
-	TH1D * data_copy = (TH1D*) data->Clone();
-	
-	data_copy->SetLineColor(color);
-	data_copy->SetMarkerColor(color);
-	data_copy->SetLineWidth(3);
-	data_copy->SetStats(0);
-
-	data_copy->Scale(1./norm);
-
-	data_copy->Draw("ep");
-	TLine* line = new TLine(0.25, 1.,0.65, 1.);
-	line->SetLineWidth(3);
-	line->SetLineColor(2);
-	line->Draw("same");
-
-	double max1 = data_copy->GetMaximum()*1.1;
-	data_copy->GetYaxis()->SetRangeUser(0.7,3);
-	
-	data_copy->GetXaxis()->SetTitle(xlabel);
-	data_copy->GetYaxis()->SetTitle(ylabel);
-
-	//data_copy->Fit("pol1","ESR","",0.25,0.65);
-
 	return;
 }

@@ -18,7 +18,7 @@ void wp_xpas_plot(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(122669.  / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D * wp_dat = new TH1D("wp_dat","wp_dat",13,1.7,3);

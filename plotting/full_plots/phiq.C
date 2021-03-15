@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void phiq(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,7 @@ void phiq(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** phiq_dat = new TH1D*[3];
@@ -28,6 +30,9 @@ void phiq(TString inDat, TString inBac, TString inSim){
 		phiq_bac[i] = new TH1D(Form("phiq_bac_%i",i),"",45,-180,180);
 		phiq_sim[i] = new TH1D(Form("phiq_sim_%i",i),"",45,-180,180);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full phiq distribution
 	TCanvas * c_phiq = new TCanvas("c_phiq","",800,600);
@@ -46,9 +51,9 @@ void phiq(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_phiq->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumQ().Phi()*180./TMath::Pi() >> phiq_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		phiq_dat[i]->Add(phiq_bac[i],-1);

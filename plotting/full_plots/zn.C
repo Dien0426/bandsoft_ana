@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void zn(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,8 +19,9 @@ void zn(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
-
+	//inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(Normmix/ bacnorm->X() );
+	
 	// Define histograms we want to plot:
 	TH1D ** zn_dat = new TH1D*[3];
 	TH1D ** zn_bac = new TH1D*[3];
@@ -28,6 +31,10 @@ void zn(TString inDat, TString inBac, TString inSim){
 		zn_bac[i] = new TH1D(Form("zn_bac_%i",i),"",80,-300,-260);
 		zn_sim[i] = new TH1D(Form("zn_sim_%i",i),"",80,-300,-260);
 	}
+
+	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
+	
 
 	// Draw the full zn distribution
 	TCanvas * c_zn = new TCanvas("c_zn","",800,600);
@@ -46,9 +53,13 @@ void zn(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_zn->cd(i+1);
-		inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//	inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//	inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		//	inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Z() >> zn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+
+	       	inTreeDat->Draw(Form("nHits[nleadindex]->getZ() >> zn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("nHits[nleadindex]->getZ() >> zn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("nHits[nleadindex]->getZ() >> zn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		zn_dat[i]->Add(zn_bac[i],-1);

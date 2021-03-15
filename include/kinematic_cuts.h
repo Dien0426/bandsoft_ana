@@ -24,7 +24,7 @@ const int	NCUT_leadindex = -1;
 const int	NCUT_status = 0;
 const double	SimAdcToMeVee = 1E4;
 const double 	DataAdcToMeVee = 1100;
-const double 	NCUT_Edep = 5;
+const double 	NCUT_Edep = 2;
 const double 	NCUT_THETANQ_min = acos(-0.8);
 const double	NCUT_THETANQ_max = acos(-1);
 const double 	NCUT_COSTHETANQ_max = -0.8;
@@ -52,5 +52,7 @@ const double	NCUT_BACK_Tof_min = -36;
 const double	NCUT_BACK_Tof_max = -4;
 // Beam structure
 const double	BEAM_BUNCH = 4; // ns
+
+const double    Normmix = 2.11955e+06 ;
 
 #endif

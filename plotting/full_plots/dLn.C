@@ -1,3 +1,6 @@
+#include "kinematic_cuts.h"
+
+
 void dLn(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +20,7 @@ void dLn(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** dLn_dat = new TH1D*[3];
@@ -28,6 +31,10 @@ void dLn(TString inDat, TString inBac, TString inSim){
 		dLn_bac[i] = new TH1D(Form("dLn_bac_%i",i),"",40,250,330);
 		dLn_sim[i] = new TH1D(Form("dLn_sim_%i",i),"",40,250,330);
 	}
+
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full dLn distribution
 	TCanvas * c_dLn = new TCanvas("c_dLn","",800,600);
@@ -46,9 +53,9 @@ void dLn(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_dLn->cd(i+1);
-		inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("nHits[nleadindex]->getDL().Mag() >> dLn_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		dLn_dat[i]->Add(dLn_bac[i],-1);

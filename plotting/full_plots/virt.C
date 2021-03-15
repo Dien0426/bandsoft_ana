@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void virt(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,8 @@ void virt(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight( Normmix / bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** virt_dat = new TH1D*[3];
@@ -28,6 +31,9 @@ void virt(TString inDat, TString inBac, TString inSim){
 		virt_bac[i] = new TH1D(Form("virt_bac_%i",i),"",25,-0.6,-0.1);
 		virt_sim[i] = new TH1D(Form("virt_sim_%i",i),"",25,-0.6,-0.1);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full virt distribution
 	TCanvas * c_virt = new TCanvas("c_virt","",800,600);
@@ -46,9 +52,9 @@ void virt(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_virt->cd(i+1);
-		inTreeDat->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("( pow(1.8756 - sqrt( pow(tag[nleadindex]->getMomentumN().Mag(),2) + pow(0.9396 ,2) ) ,2) - pow( tag[nleadindex]->getMomentumN().Mag() , 2 ) - pow(0.93827,2) )/pow(0.93827,2) >> virt_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		virt_dat[i]->Add(virt_bac[i],-1);

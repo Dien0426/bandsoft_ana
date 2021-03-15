@@ -17,7 +17,7 @@ void pn_edep_study(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(122788. / 147621606.);
 
 	// Define histograms we want to plot:
 	TH1D * pn_dat = new TH1D("pn_dat","pn_dat",40,0.2,0.6);

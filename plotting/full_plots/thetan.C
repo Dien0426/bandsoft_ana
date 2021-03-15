@@ -1,3 +1,5 @@
+#include "kinematic_cuts.h"
+
 void thetan(TString inDat, TString inBac, TString inSim){
 
 	// Define some function used
@@ -17,7 +19,8 @@ void thetan(TString inDat, TString inBac, TString inSim){
 	// Get and set the background normalization
 	TVector3 * datnorm = (TVector3*)inFileDat->Get("bacnorm");
 	TVector3 * bacnorm = (TVector3*)inFileBac->Get("bacnorm");
-	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	//	inTreeBac->SetWeight( datnorm->X() / bacnorm->X() );
+	inTreeBac->SetWeight(Normmix/ bacnorm->X() );
 
 	// Define histograms we want to plot:
 	TH1D ** thetan_dat = new TH1D*[3];
@@ -28,6 +31,9 @@ void thetan(TString inDat, TString inBac, TString inSim){
 		thetan_bac[i] = new TH1D(Form("thetan_bac_%i",i),"",30,150,180);
 		thetan_sim[i] = new TH1D(Form("thetan_sim_%i",i),"",30,150,180);
 	}
+
+       	//Adding the edep cuts here
+	TCut edep_cut = Form("nHits[nleadindex]->getEdep() > %f", NCUT_Edep * DataAdcToMeVee);
 
 	// Draw the full thetan distribution
 	TCanvas * c_thetan = new TCanvas("c_thetan","",800,600);
@@ -46,9 +52,9 @@ void thetan(TString inDat, TString inBac, TString inSim){
 		}
 
 		c_thetan->cd(i+1);
-		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
-		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut);
+		inTreeDat->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_dat_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeBac->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_bac_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
+		inTreeSim->Draw(Form("tag[nleadindex]->getMomentumN().Theta()*180./TMath::Pi() >> thetan_sim_%i",i),"tag[nleadindex]->getMomentumN().Mag() > 0.3" && pTcut && edep_cut);
 
 		// Background subraction
 		thetan_dat[i]->Add(thetan_bac[i],-1);
